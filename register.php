@@ -43,11 +43,30 @@
                 if(!$user){
                     $password_recover = "";
                     $token = "";
+                    $confirmation_code = uniqid();
                     $status = "new";
                     $date = date("d/m/Y");
-                    $sql = $pdo->prepare("INSERT INTO users VALUES (null, ?, ?, ?, ?, ?, ?, ?)");
-                    if($sql->execute(array($name, $email, $encrypted_password, $password_recover, $token, $status, $date))){
-                        header('location: index.php?result=ok');
+                    $sql = $pdo->prepare("INSERT INTO users VALUES (null, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    if($sql->execute(array($name, $email, $encrypted_password, $password_recover, $token, $confirmation_code, $status, $date))){
+                        if($mode=="local"){
+                            header('location: index.php?result=ok');
+                        }
+                        if($mode=="production"){
+                            $mail = new PHPMailer(true);
+                            try{
+                                $mail->setFrom('system@systememail.com', 'Login System');
+                                $mail->addAddress($email, $name);
+
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Confirm your email';
+                                $mail->Body    = '<h1>Please, confirm your email below: <br><br><a href="https://yoursystem.com/confirmation.php?code_confirm='.$confirmation_code.'">Confirm E-mail</a></h1>';
+
+                                $mail->send();
+                                header('location: thanks.php');
+                            }catch (Exception $e) {
+                                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                            }
+                        }
                     }
                 }else{
                     $error = "The user is already registered";

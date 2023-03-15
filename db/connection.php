@@ -1,4 +1,13 @@
 <?php
+    session_start();
+
+    use PHPMailer\PHPMailer\PHPMailer;
+    use PHPMailer\PHPMailer\Exception;
+    
+    require 'PHPMailer/src/Exception.php';
+    require 'PHPMailer/src/PHPMailer.php';
+    require 'PHPMailer/src/SMTP.php';
+
     //local and production
     $mode = "local";
 
@@ -28,5 +37,18 @@
         $data = htmlspecialchars($data);
         return $data;
     }
+
+    function auth($tokenSession){
+        global $pdo;
+        $sql = $pdo->prepare("SELECT * FROM users WHERE token=? LIMIT 1");
+        $sql->execute(array($tokenSession));
+        $user = $sql->fetch(PDO::FETCH_ASSOC);
+        if(!$user){
+            return false;
+        }else{
+            return $user;
+        }
+    }
+
 
 ?>
